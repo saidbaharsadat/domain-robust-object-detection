@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
+runs/
+results/baseline/*
+!results/baseline/.gitkeep
+data/adverse/*
+!data/adverse/.gitkeep
