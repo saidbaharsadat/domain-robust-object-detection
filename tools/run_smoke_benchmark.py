@@ -38,7 +38,7 @@ def evaluate(model: YOLO, data: str, condition: str, imgsz: int, device: str | N
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the small end-to-end adverse-condition smoke benchmark."
+        description="Run an end-to-end adverse-condition object-detection benchmark."
     )
     parser.add_argument("--config", default="configs/coco8_smoke.yaml")
     args = parser.parse_args()
@@ -51,6 +51,10 @@ def main() -> None:
 
     model = YOLO(config.get("model", "yolo11n.pt"))
     dataset = config.get("dataset", "coco8.yaml")
+    dataset_root_name = config.get("dataset_root_name", Path(dataset).stem)
+    image_subdir = config.get("image_subdir", "images/val")
+    label_subdir = config.get("label_subdir", "labels/val")
+    benchmark_name = config.get("benchmark_name", dataset_root_name)
     imgsz = int(config.get("imgsz", 640))
     device = config.get("device", "cpu")
     severity = int(config.get("severity", 3))
@@ -59,13 +63,13 @@ def main() -> None:
 
     rows = [evaluate(model, dataset, "clean", imgsz, device)]
 
-    dataset_root = Path(SETTINGS["datasets_dir"]) / "coco8"
-    image_root = dataset_root / "images" / "val"
-    label_root = dataset_root / "labels" / "val"
+    dataset_root = Path(SETTINGS["datasets_dir"]) / dataset_root_name
+    image_root = dataset_root / image_subdir
+    label_root = dataset_root / label_subdir
 
     if not image_root.exists() or not label_root.exists():
         raise RuntimeError(
-            f"Expected COCO8 validation data under {dataset_root}, but it was not found."
+            f"Expected labeled data under {image_root} and {label_root}, but it was not found."
         )
 
     preparation = {}
@@ -106,18 +110,25 @@ def main() -> None:
         summary,
         plot_path,
         metric="map50_95",
-        title=f"COCO8 smoke benchmark - adverse conditions at severity {severity}",
+        title=f"{benchmark_name} - adverse conditions at severity {severity}",
     )
 
     metadata = {
         "config": str(config_path),
+        "benchmark_name": benchmark_name,
         "dataset": dataset,
         "dataset_root": str(dataset_root),
+        "image_subdir": image_subdir,
+        "label_subdir": label_subdir,
+        "evaluated_images": int(preparation[conditions[0]]["processed_images"]) if conditions else None,
         "severity": severity,
         "seed": seed,
         "conditions": conditions,
         "preparation": preparation,
-        "note": "COCO8 smoke benchmark for pipeline reproducibility; not a research-scale robustness result.",
+        "note": config.get(
+            "note",
+            "Controlled adverse-condition benchmark; interpret results according to dataset size and scope.",
+        ),
     }
     (output / "run_metadata.json").write_text(
         json.dumps(metadata, indent=2),
