@@ -1,11 +1,22 @@
 # Results
 
-Generated predictions and metric files are written here.
+Generated predictions, transformed benchmark images, CSV metrics, plots, and model outputs are intentionally ignored by Git.
 
-Expected outputs include:
+Typical outputs include:
 
-- `baseline/predictions/` — saved detector visualizations.
-- `metrics/condition_metrics.csv` — one row per evaluated condition.
-- `metrics/class_ap_<condition>.csv` — class-wise AP values when available.
+```text
+results/
+├── baseline/
+│   └── predictions/
+├── metrics/
+│   ├── condition_metrics.csv
+│   ├── robustness_summary.csv
+│   └── map50_95_by_condition.png
+└── coco8_smoke/
+    ├── condition_metrics.csv
+    ├── robustness_summary.csv
+    ├── map50_95_by_condition.png
+    └── run_metadata.json
+```
 
-Large generated outputs should not be committed unless they are intentionally selected as compact examples for the project report.
+GitHub Actions uploads the smoke-benchmark outputs as temporary workflow artifacts. Research-scale results should only be documented after actual experiments have completed.
