@@ -1,50 +1,122 @@
 # Domain-Robust Object Detection Under Adverse Visual Conditions
 
-**Status:** Ongoing Computer Vision Project
+An ongoing computer-vision project for studying how object detectors behave when illumination, blur, weather-like effects, image noise, contrast, or camera appearance changes. The current implementation establishes a reproducible clean-vs-adverse benchmark pipeline; robust training and broader real-world domain evaluation remain future work.
 
-**Topics:** Computer Vision · Object Detection · Domain Generalization · Image Processing
+## Project goals
 
-This repository contains an ongoing study of how object detectors behave when the visual domain changes because of low illumination, blur, fog, rain-like artifacts, image noise, reduced contrast, and camera/color shifts.
+This project explores object-detection robustness when the visual domain changes.
 
-The project is intentionally being developed in stages. The current repository focuses on establishing a reproducible baseline and measuring the performance gap between clean and degraded visual conditions before adding more advanced robustness methods.
+The current work focuses on:
 
-## Current research goals
+- evaluating a pretrained detector on clean images;
+- generating controlled adverse visual conditions without changing bounding-box geometry;
+- measuring precision, recall, mAP@0.5, and mAP@0.5:0.95 across conditions;
+- quantifying the performance gap between clean and degraded inputs;
+- recording class-wise and condition-wise behavior;
+- preparing the same evaluation protocol for later augmentation, image-enhancement, and domain-robust training experiments.
 
-- Measure object-detection performance under clean and adverse visual conditions.
-- Compare precision, recall, mAP@0.5, and mAP@0.5:0.95 across conditions.
-- Identify which types of visual degradation cause the largest detection failures.
-- Document missed detections, false positives, confidence drops, and localization errors.
-- Later compare augmentation, simple image enhancement, and domain-robust training strategies.
+## Current project stage
 
-## Milestone 1 — Baseline and adverse-condition evaluation
+The repository now contains a reusable Python package, experiment tools, configuration, unit tests, continuous integration, and a small reproducibility benchmark based on the Ultralytics COCO8 validation split.
 
-The first implementation stage includes:
+COCO8 is used only as a **smoke benchmark** to verify that the complete clean-to-adverse evaluation pipeline runs correctly. Its four validation images are not large enough to support research-level conclusions. Larger and real adverse-condition datasets are planned for later experiments.
 
-1. A lightweight pretrained YOLO baseline.
-2. Prediction on normal images or videos.
-3. Synthetic generation of several adverse visual conditions.
-4. Evaluation on a labeled YOLO-format dataset.
-5. CSV-based logging of condition-wise detection metrics.
-
-The repository does **not** yet claim a completed domain-generalization method. Robust training and ablation studies are planned for later milestones.
-
-## Repository structure
+## Pipeline
 
 ```text
-domain-robust-object-detection/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── data/
-│   └── README.md
-├── experiments/
-│   └── README.md
-├── results/
-│   └── README.md
-└── src/
-    ├── baseline_detection.py
-    ├── create_adverse_conditions.py
-    └── evaluate_detector.py
+clean labeled images
+        |
+        +--------------------------+
+        |                          |
+        v                          v
+ baseline detector          adverse-condition generator
+        |                          |
+        |                    low light / blur
+        |                    fog / rain / noise
+        |                    low contrast / color shift
+        |                          |
+        +------------+-------------+
+                     |
+                     v
+            condition-wise detection
+                     |
+                     v
+       precision / recall / mAP metrics
+                     |
+                     v
+          clean-to-adverse gap analysis
+                     |
+          +----------+-----------+
+          |                      |
+          v                      v
+   class-wise analysis      failure examples
+          |                      |
+          +----------+-----------+
+                     v
+       later robustness strategies
+```
+
+## Tools and software used so far
+
+| Tool / software | Current use |
+| --- | --- |
+| **Python** | Main implementation language |
+| **Ultralytics YOLO** | Baseline object detection and validation |
+| **OpenCV** | Image loading and adverse-condition transformations |
+| **NumPy** | Numerical image operations and deterministic corruptions |
+| **Pandas** | Condition-wise metric tables and robustness summaries |
+| **PyYAML** | Experiment configuration |
+| **Matplotlib** | Metric comparison plots |
+| **pytest** | Unit tests for degradation and robustness utilities |
+| **Git / GitHub** | Version control, documentation, and experiment tracking |
+| **GitHub Actions** | Reproducible unit tests and smoke benchmark execution |
+| **COCO8** | Small current smoke benchmark for validating the complete workflow |
+
+### Dataset status
+
+The present stage is **dataset-based**. No robotics simulator is required for this project. Synthetic adverse conditions are first applied to a clean labeled validation set so that the same ground-truth boxes can be reused and the effect of visual degradation can be isolated.
+
+## Adverse conditions implemented
+
+The current implementation supports five severity levels for:
+
+- low illumination;
+- Gaussian blur;
+- fog-like contrast loss;
+- rain-like streaks;
+- Gaussian image noise;
+- reduced contrast;
+- camera/color shift.
+
+All current transformations preserve image dimensions and object geometry.
+
+## Planned datasets and extensions
+
+The next research stage will move beyond the tiny smoke benchmark.
+
+| Dataset / method | Planned use |
+| --- | --- |
+| **Larger COCO subset** | More stable clean-vs-synthetic corruption measurements |
+| **BDD100K or another driving dataset** | Natural variation in illumination, weather, and camera scenes |
+| **ExDark or another low-light detection dataset** | Real low-illumination evaluation |
+| **Mixed-condition augmentation** | Train with controlled adverse transformations |
+| **Gamma correction / CLAHE / denoising** | Test simple preprocessing before detection |
+| **Domain-robust training strategies** | Reduce the cross-condition detection gap |
+| **Failure-case analysis** | Organize misses, false positives, confidence drops, and localization errors |
+
+Candidate external datasets will be selected according to task fit, annotation compatibility, and licensing before larger experiments are reported.
+
+## Repository layout
+
+```text
+.github/workflows/             CI and reproducible smoke benchmark
+configs/                       experiment configuration
+data/                          local datasets (large files ignored)
+docs/                          milestones and experiment log
+results/                       generated outputs (ignored except documentation)
+src/domain_robust_detection/   reusable Python package
+tests/                         unit tests
+tools/                         command-line experiment scripts
 ```
 
 ## Setup
@@ -55,102 +127,140 @@ Python 3.10+ is recommended.
 python -m venv .venv
 ```
 
-Activate the environment, then install:
+Linux/macOS:
 
 ```bash
-pip install -r requirements.txt
+source .venv/bin/activate
 ```
 
-Ultralytics automatically downloads the selected pretrained YOLO weight the first time it is used.
+Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Install the project:
+
+```bash
+pip install -e .
+```
 
 ## 1. Run baseline detection
 
-Use a single image, video, webcam, or image directory:
-
 ```bash
-python src/baseline_detection.py --source path/to/images
+python tools/run_detection.py \
+  --source path/to/images \
+  --model yolo11n.pt
 ```
 
-Example with an explicit model:
+Predictions are written under `results/baseline/predictions/`.
+
+## 2. Create an adverse image set
 
 ```bash
-python src/baseline_detection.py --source path/to/images --model yolo11n.pt
-```
-
-Predictions are saved under `results/baseline/`.
-
-## 2. Create adverse visual conditions
-
-Generate one degradation at a time:
-
-```bash
-python src/create_adverse_conditions.py \
+python tools/create_adverse_conditions.py \
   --input path/to/clean/images \
   --output data/adverse/low_light \
   --condition low_light \
   --severity 3
 ```
 
-Available conditions:
+## 3. Prepare a labeled adverse validation split
 
-- `low_light`
-- `blur`
-- `fog`
-- `rain`
-- `noise`
-- `low_contrast`
-- `color_shift`
-
-Severity is an integer from 1 to 5.
-
-These transformations preserve image geometry, so existing bounding-box labels can be reused when the same filenames and directory structure are maintained.
-
-## 3. Evaluate a labeled dataset
-
-The evaluation script expects a standard Ultralytics/YOLO dataset YAML file.
+When YOLO-format labels are available:
 
 ```bash
-python src/evaluate_detector.py \
+python tools/prepare_adverse_dataset.py \
+  --images path/to/images/val \
+  --labels path/to/labels/val \
+  --output data/adverse/blur \
+  --condition blur \
+  --severity 3
+```
+
+The image geometry is preserved, so label files are copied without changing normalized bounding boxes.
+
+## 4. Evaluate one condition
+
+```bash
+python tools/evaluate_detector.py \
   --data path/to/data.yaml \
-  --condition clean
+  --condition clean \
+  --output results/metrics/condition_metrics.csv
 ```
 
-Run the same command for each adverse-condition dataset and change `--condition` accordingly.
+## 5. Compare conditions
 
-The script appends results to:
+After clean and adverse evaluations have been written to one CSV:
 
-```text
-results/metrics/condition_metrics.csv
+```bash
+python tools/compare_conditions.py \
+  --input results/metrics/condition_metrics.csv \
+  --output results/metrics/robustness_summary.csv \
+  --plot results/metrics/map50_95_by_condition.png
 ```
 
-and writes class-wise AP values when they are available.
+The summary reports absolute and relative metric drops against the clean baseline.
+
+## Reproducible smoke benchmark
+
+The repository includes a small end-to-end benchmark configuration:
+
+```bash
+python tools/run_smoke_benchmark.py --config configs/coco8_smoke.yaml
+```
+
+The command:
+
+1. evaluates a pretrained YOLO model on clean COCO8 validation images;
+2. generates each configured adverse condition;
+3. evaluates the same model on every transformed validation set;
+4. saves a condition-wise metrics CSV;
+5. computes clean-to-adverse robustness gaps;
+6. renders a mAP@0.5:0.95 comparison plot.
+
+The GitHub Actions workflow runs the same pipeline and uploads the generated experiment outputs as artifacts.
 
 ## Metrics
 
-The initial comparison records:
+The current protocol records:
 
-- Precision
-- Recall
-- mAP@0.5
-- mAP@0.5:0.95
-- Per-class AP where available
+- precision;
+- recall;
+- mAP@0.5;
+- mAP@0.5:0.95;
+- class-wise AP when available;
+- absolute metric drop from clean;
+- relative metric drop from clean.
 
-No experimental numbers are included in the repository until they are produced by actual runs.
+## Current evidence
 
-## Planned next milestones
+At the current stage, the repository demonstrates:
 
-**Milestone 2 — Robust augmentation**
+- a reusable adverse-condition generation package;
+- deterministic corruption controls and severity levels;
+- YOLO clean/adverse validation tools;
+- label-preserving adverse dataset preparation;
+- condition-wise metric logging;
+- clean-to-adverse gap analysis;
+- automated metric visualization;
+- unit tests;
+- continuous integration;
+- an end-to-end reproducible smoke-benchmark workflow.
 
-Train a small detector using mixed brightness, blur, noise, and weather-style augmentation and compare it with the clean baseline.
+Numerical smoke-test results should be interpreted only as pipeline validation because COCO8 contains very few validation images.
 
-**Milestone 3 — Image enhancement**
+## Future work
 
-Test simple preprocessing such as gamma correction, CLAHE, and denoising before detection.
+Development is intentionally incremental:
 
-**Milestone 4 — Ablation and failure analysis**
+1. Run and document the COCO8 smoke benchmark.
+2. Move to a larger labeled clean subset for more stable synthetic-corruption comparisons.
+3. Add mixed-condition training augmentation.
+4. Test simple image enhancement before detection.
+5. Compare baseline, augmentation, enhancement, and combined strategies.
+6. Add one or more real adverse-condition datasets.
+7. Expand class-wise and failure-case analysis.
+8. Study whether robustness improvements transfer across datasets and camera domains.
 
-Compare baseline, augmentation, enhancement, and combined strategies, then organize representative failure cases by visual condition.
-
-## Project scope
-
-This is a practical research project rather than a finished benchmark. The implementation is kept intentionally moderate so each method can be added, tested, and documented separately as the study progresses.
+See `docs/milestones.md` for the implementation roadmap and the separation between current work and future extensions.
