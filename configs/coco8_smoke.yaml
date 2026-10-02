@@ -1,0 +1,18 @@
+model: yolo11n.pt
+dataset: coco8.yaml
+imgsz: 640
+confidence: 0.25
+device: cpu
+severity: 3
+seed: 42
+
+conditions:
+  - low_light
+  - blur
+  - fog
+  - rain
+  - noise
+  - low_contrast
+  - color_shift
+
+output_dir: results/coco8_smoke
