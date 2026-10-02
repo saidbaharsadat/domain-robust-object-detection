@@ -1,0 +1,22 @@
+benchmark_name: COCO128 robustness baseline
+model: yolo11n.pt
+dataset: coco128.yaml
+dataset_root_name: coco128
+image_subdir: images/train2017
+label_subdir: labels/train2017
+imgsz: 640
+device: cpu
+severity: 3
+seed: 42
+
+conditions:
+  - low_light
+  - blur
+  - fog
+  - rain
+  - noise
+  - low_contrast
+  - color_shift
+
+output_dir: results/coco128_baseline
+note: "128-image controlled benchmark for a stronger baseline than the COCO8 smoke test; still not a substitute for evaluation on real adverse-domain datasets."
