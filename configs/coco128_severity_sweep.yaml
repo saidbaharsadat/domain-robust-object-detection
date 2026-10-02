@@ -1,0 +1,22 @@
+benchmark_name: COCO128 multi-severity robustness study
+model: yolo11n.pt
+dataset: coco128.yaml
+dataset_root_name: coco128
+image_subdir: images/train2017
+label_subdir: labels/train2017
+imgsz: 640
+device: cpu
+seed: 42
+severities: [1, 2, 3, 4, 5]
+
+conditions:
+  - low_light
+  - blur
+  - fog
+  - rain
+  - noise
+  - low_contrast
+  - color_shift
+
+output_dir: results/coco128_severity_sweep
+note: "Controlled 128-image severity sweep. Synthetic corruption robustness should be distinguished from natural cross-domain generalization."
