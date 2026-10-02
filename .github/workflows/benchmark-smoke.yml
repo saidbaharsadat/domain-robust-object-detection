@@ -41,14 +41,17 @@ jobs:
       - name: Run COCO128 robustness baseline
         run: python tools/run_smoke_benchmark.py --config configs/coco128_baseline.yaml
 
+      - name: Run COCO128 multi-severity study
+        run: python tools/run_severity_sweep.py --config configs/coco128_severity_sweep.yaml
+
       - name: Show COCO128 outputs
         run: |
           echo "Condition metrics:"
           cat results/coco128_baseline/condition_metrics.csv
           echo "Robustness summary:"
           cat results/coco128_baseline/robustness_summary.csv
-          echo "Metadata:"
-          cat results/coco128_baseline/run_metadata.json
+          echo "Severity sweep metadata:"
+          cat results/coco128_severity_sweep/run_metadata.json
 
       - name: Upload benchmark artifacts
         uses: actions/upload-artifact@v4
@@ -63,4 +66,9 @@ jobs:
             results/coco128_baseline/robustness_summary.csv
             results/coco128_baseline/map50_95_by_condition.png
             results/coco128_baseline/run_metadata.json
+            results/coco128_severity_sweep/severity_metrics.csv
+            results/coco128_severity_sweep/map50_95_by_severity.csv
+            results/coco128_severity_sweep/map50_95_severity_curves.png
+            results/coco128_severity_sweep/relative_drop_severity_curves.png
+            results/coco128_severity_sweep/run_metadata.json
           retention-days: 14
