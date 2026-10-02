@@ -6,7 +6,12 @@ __pycache__/
 .DS_Store
 Thumbs.db
 runs/
-results/baseline/*
-!results/baseline/.gitkeep
-data/adverse/*
-!data/adverse/.gitkeep
+*.pt
+
+data/*
+!data/README.md
+results/*
+!results/README.md
+
+.pytest_cache/
+.coverage
