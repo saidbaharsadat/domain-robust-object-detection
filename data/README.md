@@ -1,24 +1,21 @@
 # Data
 
-Dataset files are not committed to this repository.
+Large datasets are intentionally excluded from Git.
 
-For the first milestone, use a YOLO-format object-detection dataset with images, labels, and a dataset YAML file.
+The current reproducibility workflow uses Ultralytics COCO8 only as a tiny smoke benchmark. The benchmark runner resolves it through Ultralytics and generates adverse validation copies under the ignored results directory.
 
-Suggested working layout:
+For local research experiments, a typical YOLO-format layout is:
 
 ```text
 data/
-├── clean/
-│   ├── images/
-│   └── labels/
-└── adverse/
-    ├── low_light/
-    ├── blur/
-    ├── fog/
-    ├── rain/
-    ├── noise/
-    ├── low_contrast/
-    └── color_shift/
+└── dataset_name/
+    ├── images/
+    │   ├── train/
+    │   └── val/
+    ├── labels/
+    │   ├── train/
+    │   └── val/
+    └── data.yaml
 ```
 
-The synthetic transformations in `src/create_adverse_conditions.py` do not change image geometry. Bounding-box labels can therefore be reused for transformed copies as long as filenames and split structure remain aligned.
+Synthetic transformations in this repository preserve image geometry, so YOLO bounding-box labels can be copied unchanged when filenames and split structure remain aligned.
