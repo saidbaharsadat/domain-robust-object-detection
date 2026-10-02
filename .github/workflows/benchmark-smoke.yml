@@ -1,4 +1,4 @@
-name: Adverse-condition detection smoke benchmark
+name: Adverse-condition detection benchmark
 
 on:
   workflow_dispatch:
@@ -12,9 +12,9 @@ on:
       - "pyproject.toml"
 
 jobs:
-  benchmark-smoke:
+  benchmark:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -35,25 +35,32 @@ jobs:
       - name: Run unit tests
         run: pytest -q
 
-      - name: Run COCO8 adverse-condition benchmark
+      - name: Run COCO8 smoke benchmark
         run: python tools/run_smoke_benchmark.py --config configs/coco8_smoke.yaml
 
-      - name: Show benchmark outputs
+      - name: Run COCO128 robustness baseline
+        run: python tools/run_smoke_benchmark.py --config configs/coco128_baseline.yaml
+
+      - name: Show COCO128 outputs
         run: |
           echo "Condition metrics:"
-          cat results/coco8_smoke/condition_metrics.csv
+          cat results/coco128_baseline/condition_metrics.csv
           echo "Robustness summary:"
-          cat results/coco8_smoke/robustness_summary.csv
+          cat results/coco128_baseline/robustness_summary.csv
           echo "Metadata:"
-          cat results/coco8_smoke/run_metadata.json
+          cat results/coco128_baseline/run_metadata.json
 
-      - name: Upload experiment artifacts
+      - name: Upload benchmark artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coco8-adverse-condition-smoke-benchmark
+          name: adverse-condition-detection-benchmarks
           path: |
             results/coco8_smoke/condition_metrics.csv
             results/coco8_smoke/robustness_summary.csv
             results/coco8_smoke/map50_95_by_condition.png
             results/coco8_smoke/run_metadata.json
+            results/coco128_baseline/condition_metrics.csv
+            results/coco128_baseline/robustness_summary.csv
+            results/coco128_baseline/map50_95_by_condition.png
+            results/coco128_baseline/run_metadata.json
           retention-days: 14
