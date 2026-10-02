@@ -233,6 +233,32 @@ The current protocol records:
 - absolute metric drop from clean;
 - relative metric drop from clean.
 
+## Current benchmark result
+
+A complete end-to-end smoke benchmark has been executed successfully in GitHub Actions using **YOLO11n**, the **COCO8 validation split (4 images, 17 labeled instances)**, and severity level **3** for seven controlled adverse conditions.
+
+| Condition | Precision | Recall | mAP@0.5 | mAP@0.5:0.95 | mAP@0.5:0.95 change vs. clean |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Clean | 0.570 | 0.850 | 0.846 | 0.630 | reference |
+| Low light | 0.609 | 0.839 | 0.861 | 0.651 | +3.3% |
+| Blur | 0.772 | 0.633 | 0.877 | 0.579 | -8.2% |
+| Fog | 0.795 | 0.623 | 0.847 | 0.627 | -0.5% |
+| Rain | 0.591 | 0.900 | 0.889 | 0.570 | -9.5% |
+| Noise | 0.617 | 0.643 | 0.564 | 0.383 | **-39.2%** |
+| Low contrast | 0.892 | 0.701 | 0.933 | 0.635 | +0.7% |
+| Color shift | 0.895 | 0.701 | 0.840 | 0.641 | +1.6% |
+
+In this small reproducibility run, Gaussian image noise produced the largest mAP@0.5:0.95 degradation, followed by rain and blur. These values are **not treated as research-scale conclusions** because COCO8 contains only four validation images; they demonstrate that the full condition-generation, label-preservation, evaluation, logging, and robustness-gap pipeline works end to end.
+
+The completed GitHub Actions run also generated:
+
+- `condition_metrics.csv`;
+- `robustness_summary.csv`;
+- `map50_95_by_condition.png`;
+- `run_metadata.json`.
+
+A stronger **COCO128 (128-image)** robustness baseline has now been added to the workflow and is the next dataset-scale step before moving to real adverse-domain datasets.
+
 ## Current evidence
 
 At the current stage, the repository demonstrates:
@@ -254,8 +280,8 @@ Numerical smoke-test results should be interpreted only as pipeline validation b
 
 Development is intentionally incremental:
 
-1. Run and document the COCO8 smoke benchmark.
-2. Move to a larger labeled clean subset for more stable synthetic-corruption comparisons.
+1. Keep the completed COCO8 run as a reproducibility smoke test.
+2. Run and document the configured COCO128 baseline for a more stable 128-image synthetic-corruption comparison.
 3. Add mixed-condition training augmentation.
 4. Test simple image enhancement before detection.
 5. Compare baseline, augmentation, enhancement, and combined strategies.
