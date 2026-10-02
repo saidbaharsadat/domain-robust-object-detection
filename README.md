@@ -235,29 +235,26 @@ The current protocol records:
 
 ## Current benchmark result
 
-A complete end-to-end smoke benchmark has been executed successfully in GitHub Actions using **YOLO11n**, the **COCO8 validation split (4 images, 17 labeled instances)**, and severity level **3** for seven controlled adverse conditions.
+The current primary baseline is a completed **COCO128 robustness experiment** using **YOLO11n**, **128 labeled images**, severity level **3**, and seven controlled adverse visual conditions.
 
-| Condition | Precision | Recall | mAP@0.5 | mAP@0.5:0.95 | mAP@0.5:0.95 change vs. clean |
+| Condition | Precision | Recall | mAP@0.5 | mAP@0.5:0.95 | Relative mAP@0.5:0.95 drop |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Clean | 0.570 | 0.850 | 0.846 | 0.630 | reference |
-| Low light | 0.609 | 0.839 | 0.861 | 0.651 | +3.3% |
-| Blur | 0.772 | 0.633 | 0.877 | 0.579 | -8.2% |
-| Fog | 0.795 | 0.623 | 0.847 | 0.627 | -0.5% |
-| Rain | 0.591 | 0.900 | 0.889 | 0.570 | -9.5% |
-| Noise | 0.617 | 0.643 | 0.564 | 0.383 | **-39.2%** |
-| Low contrast | 0.892 | 0.701 | 0.933 | 0.635 | +0.7% |
-| Color shift | 0.895 | 0.701 | 0.840 | 0.641 | +1.6% |
+| Clean | 0.663 | 0.589 | 0.670 | **0.502** | reference |
+| Low light | 0.749 | 0.541 | 0.661 | 0.500 | 0.4% |
+| Blur | 0.683 | 0.541 | 0.635 | 0.462 | **8.0%** |
+| Fog | 0.728 | 0.564 | 0.646 | 0.478 | 4.8% |
+| Rain | 0.647 | 0.534 | 0.607 | 0.446 | **11.2%** |
+| Noise | 0.540 | 0.459 | 0.501 | **0.367** | **26.9%** |
+| Low contrast | 0.674 | 0.580 | 0.639 | 0.475 | 5.4% |
+| Color shift | 0.683 | 0.559 | 0.651 | 0.490 | 2.5% |
 
-In this small reproducibility run, Gaussian image noise produced the largest mAP@0.5:0.95 degradation, followed by rain and blur. These values are **not treated as research-scale conclusions** because COCO8 contains only four validation images; they demonstrate that the full condition-generation, label-preservation, evaluation, logging, and robustness-gap pipeline works end to end.
+![COCO128 mAP comparison](docs/images/coco128_map50_95_by_condition.svg)
 
-The completed GitHub Actions run also generated:
+In this controlled 128-image run, Gaussian image noise produced the largest drop in mAP@0.5:0.95, followed by rain and blur. The experiment was executed successfully in GitHub Actions and its measured outputs are retained permanently in the repository under `docs/results/`.
 
-- `condition_metrics.csv`;
-- `robustness_summary.csv`;
-- `map50_95_by_condition.png`;
-- `run_metadata.json`.
+A detailed experiment note is available in `docs/coco128_baseline.md`.
 
-A stronger **COCO128 (128-image)** robustness baseline has now been added to the workflow and is the next dataset-scale step before moving to real adverse-domain datasets.
+The earlier **COCO8 four-image run** is retained only as a smoke test for end-to-end reproducibility and should not be treated as the main experimental result.
 
 ## Current evidence
 
@@ -280,8 +277,8 @@ Numerical smoke-test results should be interpreted only as pipeline validation b
 
 Development is intentionally incremental:
 
-1. Keep the completed COCO8 run as a reproducibility smoke test.
-2. Run and document the configured COCO128 baseline for a more stable 128-image synthetic-corruption comparison.
+1. Extend the completed COCO128 baseline across severity levels 1-5.
+2. Add qualitative failure-case examples for clean, blur, rain, and noise.
 3. Add mixed-condition training augmentation.
 4. Test simple image enhancement before detection.
 5. Compare baseline, augmentation, enhancement, and combined strategies.
