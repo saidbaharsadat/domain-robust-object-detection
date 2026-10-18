@@ -17,7 +17,7 @@ The current work focuses on:
 
 ## Current project stage
 
-The repository now contains a reusable Python package, experiment tools, configuration, unit tests, continuous integration, and a small reproducibility benchmark based on the Ultralytics COCO8 validation split.
+The repository now contains a reusable Python package, experiment tools, configuration, unit tests, continuous integration, a COCO8 smoke benchmark, and completed COCO128 single-severity and multi-severity synthetic-corruption studies.
 
 COCO8 is used only as a **smoke benchmark** to verify that the complete clean-to-adverse evaluation pipeline runs correctly. Its four validation images are not large enough to support research-level conclusions. Larger and real adverse-condition datasets are planned for later experiments.
 
@@ -69,8 +69,9 @@ clean labeled images
 | **Matplotlib** | Metric comparison plots |
 | **pytest** | Unit tests for degradation and robustness utilities |
 | **Git / GitHub** | Version control, documentation, and experiment tracking |
-| **GitHub Actions** | Reproducible unit tests and smoke benchmark execution |
-| **COCO8** | Small current smoke benchmark for validating the complete workflow |
+| **GitHub Actions** | Unit tests, smoke checks, and COCO128 benchmark execution |
+| **COCO8** | Four-image smoke benchmark for validating the complete workflow |
+| **COCO128** | Completed 128-image baseline and severity 1–5 synthetic-corruption study |
 
 ### Dataset status
 
@@ -92,7 +93,7 @@ All current transformations preserve image dimensions and object geometry.
 
 ## Planned datasets and extensions
 
-The next research stage will move beyond the tiny smoke benchmark.
+The completed COCO128 studies extend the four-image smoke benchmark. The next research stage will expand beyond this small controlled subset.
 
 | Dataset / method | Planned use |
 | --- | --- |
@@ -235,7 +236,7 @@ The current protocol records:
 
 ## Current benchmark result
 
-The current primary baseline is a completed **COCO128 robustness experiment** using **YOLO11n**, **128 labeled images**, severity level **3**, and seven controlled adverse visual conditions.
+The retained single-severity baseline is a completed **COCO128 robustness experiment** using **YOLO11n**, **128 labeled images**, severity level **3**, and seven controlled adverse visual conditions.
 
 | Condition | Precision | Recall | mAP@0.5 | mAP@0.5:0.95 | Relative mAP@0.5:0.95 drop |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -256,6 +257,38 @@ A detailed experiment note is available in `docs/coco128_baseline.md`.
 
 The earlier **COCO8 four-image run** is retained only as a smoke test for end-to-end reproducibility and should not be treated as the main experimental result.
 
+## Completed COCO128 multi-severity study
+
+The [2026-10-02 Actions run](https://github.com/saidbaharsadat/domain-robust-object-detection/actions/runs/37008467779) at commit `f55827508066558b7bba7996865502dbe5372d11` completed the severity-sweep step successfully. Its [job log](https://github.com/saidbaharsadat/domain-robust-object-detection/actions/runs/37008467779/job/110842222399) records all **36 evaluations**: one clean reference and seven conditions at five severity levels, each on **128 images / 929 instances**. Configuration: pretrained **YOLO11n**, image size **640**, **CPU**, corruption seed **42**.
+
+mAP@0.5:0.95 (clean reference **0.5024**):
+
+| Condition | S1 | S2 | S3 | S4 | S5 | S5 relative drop |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| low light | 0.5062 | 0.5082 | 0.5004 | 0.4853 | 0.4505 | 10.34% |
+| blur | 0.4971 | 0.4803 | 0.4622 | 0.4434 | 0.3889 | 22.60% |
+| fog | 0.4991 | 0.4924 | 0.4782 | 0.4506 | 0.4198 | 16.45% |
+| rain | 0.4849 | 0.4770 | 0.4461 | 0.4127 | 0.3513 | 30.09% |
+| noise | 0.5017 | 0.4507 | 0.3671 | 0.2727 | 0.1657 | 67.02% |
+| low contrast | 0.5039 | 0.5001 | 0.4752 | 0.4586 | 0.4303 | 14.36% |
+| color shift | 0.4963 | 0.4943 | 0.4901 | 0.4785 | 0.4660 | 7.25% |
+
+Blur, fog, rain, noise, low contrast, and color shift decrease monotonically across severities 1–5. Low light is non-monotonic at mild severity (0.5062 → 0.5082), then falls to 0.4505. Mild low light and severity-1 low contrast slightly exceed clean mAP; this single small-set run does not establish a general improvement. Noise has the lowest mAP from severity 2 onward, reaching **0.1657 (67.02% relative decrease)** at severity 5.
+
+The clean and severity-3 measurements exactly match the retained baseline, including **noise 0.3671 (26.94% relative decrease)**. Full precision, recall, mAP, and drop values are retained in [severity metrics](docs/results/coco128_severity_metrics.csv), with [metadata](docs/results/coco128_severity_run_metadata.json), a [severity pivot](docs/results/coco128_map50_95_by_severity.csv), and a [provenance/reproduction note](docs/coco128_severity_study.md).
+
+The artifact upload succeeded, but its ZIP is no longer available (14-day retention; artifact listing empty and download returns 404 on 2026-10-18). The retained CSV and metadata were recovered from the job log; the original plot PNGs were not recovered. This is verified historical execution, not a new independent rerun.
+
+These results measure **synthetic corruption robustness on the same COCO128 images**, not real-world domain generalization. They do not evaluate robust training, independent adverse-domain datasets, repeated seeds, or statistical uncertainty.
+
+Reproduce after [setup](#setup):
+
+```bash
+python tools/run_severity_sweep.py --config configs/coco128_severity_sweep.yaml
+```
+
+The command writes severity metrics, a severity pivot, two robustness-curve PNGs, and metadata under `results/coco128_severity_sweep/`.
+
 ## Current evidence
 
 At the current stage, the repository demonstrates:
@@ -269,7 +302,8 @@ At the current stage, the repository demonstrates:
 - automated metric visualization;
 - unit tests;
 - continuous integration;
-- an end-to-end reproducible smoke-benchmark workflow.
+- an end-to-end reproducible smoke-benchmark workflow;
+- a completed COCO128 severity 1–5 study with 36 logged evaluations and retained numerical results.
 
 Numerical smoke-test results should be interpreted only as pipeline validation because COCO8 contains very few validation images.
 
@@ -277,7 +311,7 @@ Numerical smoke-test results should be interpreted only as pipeline validation b
 
 Development is intentionally incremental:
 
-1. Extend the completed COCO128 baseline across severity levels 1-5.
+1. Extend the completed COCO128 severity study to a larger independent validation set, repeated seeds, and uncertainty estimates.
 2. Add qualitative failure-case examples for clean, blur, rain, and noise.
 3. Add mixed-condition training augmentation.
 4. Test simple image enhancement before detection.
