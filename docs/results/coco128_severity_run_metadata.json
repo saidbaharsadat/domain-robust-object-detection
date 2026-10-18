@@ -1,0 +1,67 @@
+{
+  "config": "configs/coco128_severity_sweep.yaml",
+  "benchmark_name": "COCO128 multi-severity robustness study",
+  "dataset": "coco128.yaml",
+  "evaluated_images": 128,
+  "severities": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "conditions": [
+    "low_light",
+    "blur",
+    "fog",
+    "rain",
+    "noise",
+    "low_contrast",
+    "color_shift"
+  ],
+  "seed": 42,
+  "worst_observation": {
+    "condition": "noise",
+    "severity": 5,
+    "map50_95": 0.16569901439613044,
+    "relative_drop_percent": 67.02137646002119
+  },
+  "severity_5_ranking": [
+    {
+      "condition": "noise",
+      "map50_95": 0.16569901439613044,
+      "relative_drop_percent": 67.02137646002119
+    },
+    {
+      "condition": "rain",
+      "map50_95": 0.3512776736822219,
+      "relative_drop_percent": 30.08616134148802
+    },
+    {
+      "condition": "blur",
+      "map50_95": 0.3889008514925361,
+      "relative_drop_percent": 22.598122731808687
+    },
+    {
+      "condition": "fog",
+      "map50_95": 0.41978876765454365,
+      "relative_drop_percent": 16.450584903936964
+    },
+    {
+      "condition": "low_contrast",
+      "map50_95": 0.4303103807575081,
+      "relative_drop_percent": 14.356496904557309
+    },
+    {
+      "condition": "low_light",
+      "map50_95": 0.4504813251227112,
+      "relative_drop_percent": 10.341928784824274
+    },
+    {
+      "condition": "color_shift",
+      "map50_95": 0.46602420920005794,
+      "relative_drop_percent": 7.248470899269594
+    }
+  ],
+  "note": "Controlled 128-image severity sweep. Synthetic corruption robustness should be distinguished from natural cross-domain generalization."
+}
